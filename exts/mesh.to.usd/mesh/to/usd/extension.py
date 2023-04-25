@@ -1,6 +1,8 @@
 import omni.ext
 import omni.ui as ui
-from .MeshGen.sdf_to_mesh import mc_result
+#from .MeshGen.sdf_to_mesh import mc_result
+
+from pxr import Gf
 
 
 # Functions and vars are available to other extension as usual in python: `example.python_ext.some_public_function(x)`
@@ -24,14 +26,48 @@ class MeshToUsdExtension(omni.ext.IExt):
         with self._window.frame:
             with ui.VStack():
                 label = ui.Label("")
+                
+                def process(path):
+                    infile = open(path,'r')
+                    lines = infile.readlines()
+
+                    for i in range(len(lines)):
+                        lines[i] = lines[i].replace('\n','').split(' ')[1:]
+
+                    if [] in lines:
+                        lines.remove([])
+
+                    idx1 = lines.index(['Normals'])
+                    verts = lines[1:idx1]
+                    float_verts = []
+                    for i in range(len(verts)):
+                        float_verts.append(Gf.Vec3f(float(verts[i][0]), float(verts[i][1]), float(verts[i][2])))
+
+                    idx2 = lines.index(['Faces'])
+                    normals = lines[idx1+1:idx2]
+                    float_norms = []
+                    print(normals)
+                    for i in range(len(normals)):
+                        float_norms.append(Gf.Vec3f(float(normals[i][0]), float(normals[i][1]), float(normals[i][2])))
+                        float_norms.append(Gf.Vec3f(float(normals[i][0]), float(normals[i][1]), float(normals[i][2])))
+                        float_norms.append(Gf.Vec3f(float(normals[i][0]), float(normals[i][1]), float(normals[i][2])))
+
+                    faces = lines[idx2+1:]
+                    int_faces = []
+                    for i in range(len(faces)):
+                        int_faces.append(int(faces[i][0]) - 1)
+                        int_faces.append(int(faces[i][1]) - 1)
+                        int_faces.append(int(faces[i][2]) - 1)
+
+                    print(type(float_verts))
+                    print(float_verts)
+
+                    return float_verts, int_faces, float_norms
+
 
                 def assemble():
                     stage = omni.usd.get_context().get_stage()
 
-                    infile = open('hihihi.obj','r')
-                    data = infile.read()
-                    print(data)
-                
                     omni.kit.commands.execute('CreateMeshPrimWithDefaultXform',
                         prim_type='Cube',
                         prim_path=None,
@@ -45,12 +81,17 @@ class MeshToUsdExtension(omni.ext.IExt):
 
                     cube_prim = stage.GetPrimAtPath('/World/Trail')
 
+                    verts, faces, normals = process('C:/users/labuser/desktop/data transfer/meshtousd/exts/mesh.to.usd/mesh/to/usd/hihihi.obj')
 
-                    face_vert_count = [3]*len(faces)
+
+                    face_vert_count = [3]*(len(faces)//3)
 
                     primvar = [(0,0)]*len(faces)
 
-                    attributes = ['faceVertexCounts', 'faceVertexIndices', 'normals', 'points', 'primvars:st']
+
+                    print(type(cube_prim.GetAttribute('faceVertexIndices').Get()))
+                    print(cube_prim.GetAttribute('faceVertexIndices').Get())
+                    print(type(face_vert_count))
 
                     cube_prim.GetAttribute('faceVertexCounts').Set(face_vert_count)
                     cube_prim.GetAttribute('faceVertexIndices').Set(faces)
