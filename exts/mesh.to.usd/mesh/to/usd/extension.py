@@ -1,8 +1,9 @@
 import omni.ext
 import omni.ui as ui
+import omni.usd
 #from .MeshGen.sdf_to_mesh import mc_result
 
-from pxr import Gf
+from pxr import Gf, Sdf
 
 
 # Functions and vars are available to other extension as usual in python: `example.python_ext.some_public_function(x)`
@@ -68,20 +69,21 @@ class MeshToUsdExtension(omni.ext.IExt):
                 def assemble():
                     stage = omni.usd.get_context().get_stage()
 
-                    omni.kit.commands.execute('CreateMeshPrimWithDefaultXform',
-                        prim_type='Cube',
-                        prim_path=None,
-                        select_new_prim=True,
-                        prepend_default_prim=True)
-                    
-                    omni.kit.commands.execute('MovePrim',
-                        path_from='/World/Cube',
-                        path_to='/World/Trail',
-                        destructive=False)
+                    if(not stage.GetPrimAtPath(Sdf.Path('/World/Trial')).IsValid()):
+                        omni.kit.commands.execute('CreateMeshPrimWithDefaultXform',
+                            prim_type='Cube',
+                            prim_path=None,
+                            select_new_prim=True,
+                            prepend_default_prim=True)
+                        
+                        omni.kit.commands.execute('MovePrim',
+                            path_from='/World/Cube',
+                            path_to='/World/Trial',
+                            destructive=False)
 
-                    cube_prim = stage.GetPrimAtPath('/World/Trail')
+                    cube_prim = stage.GetPrimAtPath('/World/Trial')
 
-                    verts, faces, normals = process('C:/users/labuser/desktop/data transfer/meshtousd/exts/mesh.to.usd/mesh/to/usd/hihihi.obj')
+                    verts, faces, normals = process('C:/users/labuser/desktop/data transfer/meshtousd/exts/mesh.to.usd/mesh/to/usd/whyyyyyyyareumeaningless.obj')
 
 
                     face_vert_count = [3]*(len(faces)//3)
